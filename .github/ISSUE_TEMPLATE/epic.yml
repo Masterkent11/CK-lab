@@ -1,0 +1,33 @@
+name: Epic
+description: A product outcome that spans multiple issues.
+title: "[epic] "
+labels: [epic]
+body:
+  - type: input
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the outcome this epic enables.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Explain scope and link the supporting requirements.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: List the evidence that will establish completion.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options: [UX/UI, Engineering, Security]
+    validations:
+      required: true

@@ -1,0 +1,34 @@
+{
+  "timezone": "Asia/Manila",
+  "sprint": {
+    "start": "2026-11-16",
+    "days": 14,
+    "capacity": 21,
+    "max_proposals": 6,
+    "iteration_horizon": 8
+  },
+  "project": {
+    "title": "Embroidery Platform — Product & Engineering",
+    "number": null,
+    "views": [
+      {"name": "Product Backlog", "layout": "TABLE_LAYOUT", "filter": "status:Backlog,Ready"},
+      {"name": "Active Sprint", "layout": "TABLE_LAYOUT", "filter": "sprint:@current"},
+      {"name": "Kanban Board", "layout": "BOARD_LAYOUT", "filter": ""},
+      {"name": "UX/UI Design Track", "layout": "TABLE_LAYOUT", "filter": "track:\"UX/UI\""},
+      {"name": "Engineering Track", "layout": "TABLE_LAYOUT", "filter": "track:Engineering"},
+      {"name": "Security & Vulnerabilities", "layout": "TABLE_LAYOUT", "filter": "track:Security"},
+      {"name": "Sprint Roadmap", "layout": "ROADMAP_LAYOUT", "filter": "has:sprint"}
+    ]
+  },
+  "schedules": {
+    "daily": {"days": [0, 1, 2, 3, 4], "time": "09:00", "window_hours": 12},
+    "weekly": {"days": [4], "time": "17:00", "window_hours": 7},
+    "sprint": {"days": [0, 1, 2, 3, 4, 5, 6], "time": "09:00", "window_hours": 12},
+    "security": {"days": [0], "time": "09:00", "window_hours": 12}
+  },
+  "notifications": {
+    "enabled": true,
+    "events": ["daily", "weekly", "sprint_start", "sprint_end", "ci", "security", "blocked", "health", "test"],
+    "cooldown_minutes": {"ci": 30, "health": 60, "blocked": 720, "security": 1440}
+  }
+}

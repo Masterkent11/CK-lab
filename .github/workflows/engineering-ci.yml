@@ -1,0 +1,70 @@
+name: Engineering CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    name: Python, C++20 and quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
+      - name: Test automation
+        run: python -m unittest discover -s tests -v
+      - name: Install C++ tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends clang-18 clang-format-18 clang-tidy-18 cppcheck ninja-build
+      - name: Configure and test
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake --build build
+          ctest --test-dir build --output-on-failure --no-tests=error
+      - name: Format and static analysis
+        if: success()
+        run: |
+          mapfile -d '' sources < <(git ls-files -z -- '*.cpp' '*.cc' '*.cxx' '*.h' '*.hpp')
+          clang-format-18 --dry-run --Werror "${sources[@]}"
+          mapfile -d '' units < <(git ls-files -z -- '*.cpp' '*.cc' '*.cxx')
+          clang-tidy-18 -p build --warnings-as-errors='*' "${units[@]}"
+          cppcheck --error-exitcode=1 --enable=warning,performance,portability --std=c++20 --suppress=missingIncludeSystem "${units[@]}"
+      - name: Address and undefined behavior sanitizers
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: |
+          cmake -S . -B build-sanitized -G Ninja -DCMAKE_BUILD_TYPE=Debug -DEMBROIDERY_SANITIZERS=ON -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST="$PWD/build/_deps/googletest-src"
+          cmake --build build-sanitized
+          ctest --test-dir build-sanitized --output-on-failure --no-tests=error
+
+  secret-scan:
+    name: Gitleaks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan changes
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash .github/scripts/gitleaks.sh "$RUNNER_TEMP/gitleaks.json" "${PR_BASE_SHA:+$PR_BASE_SHA..HEAD}"

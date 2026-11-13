@@ -1,0 +1,97 @@
+name: Spike
+description: A question to investigate and a decision to record.
+title: "[spike] "
+labels: [spike]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: "State the question and the decision it informs."
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "Describe the work and its boundaries."
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: "List observable outcomes."
+    validations:
+      required: true
+  - type: dropdown
+    id: points
+    attributes:
+      label: Story points
+      description: "Choose a proposed Fibonacci estimate."
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+        - "8"
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: "Choose the proposed priority."
+      options:
+        - "P0"
+        - "P1"
+        - "P2"
+        - "P3"
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: "Choose the responsible track."
+      options:
+        - "UX/UI"
+        - "Engineering"
+        - "Security"
+    validations:
+      required: true
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: "List repository issue numbers such as #12, or enter None."
+    validations:
+      required: true
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing
+      description: "Describe how to verify the outcome."
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      description: "List the evidence or review required before closing."
+    validations:
+      required: true
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: "Enter the parent epic ID such as EPIC-001."
+    validations:
+      required: false
+  - type: input
+    id: due
+    attributes:
+      label: Due date
+      description: "Enter a date as YYYY-MM-DD if applicable."
+    validations:
+      required: false

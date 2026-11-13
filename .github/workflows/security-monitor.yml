@@ -1,0 +1,59 @@
+name: Security monitor
+on:
+  schedule:
+    - cron: '23 9 * * 1'
+      timezone: Asia/Manila
+  workflow_dispatch:
+    inputs:
+      apply:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  security-events: read
+
+jobs:
+  scan:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: engineering-mutations
+      queue: max
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan repository history
+        id: gitleaks
+        run: |
+          code=0
+          bash .github/scripts/gitleaks.sh "$RUNNER_TEMP/gitleaks.json" || code=$?
+          if [[ "$code" != 0 && "$code" != 25 ]]; then exit "$code"; fi
+          printf 'findings=%s\n' "$code" >> "$GITHUB_OUTPUT"
+      - name: Triage scanner results
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEPENDABOT_TOKEN: ${{ secrets.DEPENDABOT_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ENGINEERING_PROJECT_NUMBER: ${{ vars.ENGINEERING_PROJECT_NUMBER }}
+          AUTOMATION_WRITES: ${{ vars.AUTOMATION_WRITES }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APPLY: ${{ inputs.apply || github.event_name == 'schedule' }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          args=()
+          if [[ "$APPLY" == true ]]; then args+=(--apply); fi
+          args+=(security --report "$RUNNER_TEMP/gitleaks.json")
+          if [[ "$EVENT_NAME" == schedule ]]; then args+=(--scheduled); fi
+          python3 -m automation "${args[@]}"
+      - name: Flag findings for review
+        if: steps.gitleaks.outputs.findings == '25'
+        run: |
+          printf '%s\n' '::error::Gitleaks found candidate secrets. Follow the private triage process in docs/automation/security-policy.md.'
+          exit 1

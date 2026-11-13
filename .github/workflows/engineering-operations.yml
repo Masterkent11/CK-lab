@@ -1,0 +1,67 @@
+name: Engineering operations
+on:
+  schedule:
+    - cron: '7 9 * * *'
+      timezone: Asia/Manila
+    - cron: '7 17 * * 5'
+      timezone: Asia/Manila
+  workflow_dispatch:
+    inputs:
+      command:
+        type: choice
+        options: [daily, weekly, sprint_start, sprint_end, setup, seed, reconcile, propose, approve, classify-fixture, test-notification]
+        default: daily
+      sprint:
+        type: number
+        description: Sprint number for approval
+        default: 0
+      issues:
+        type: string
+        description: Space separated issue numbers for approval or reconciliation
+      apply:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  operations:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: engineering-mutations
+      queue: max
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Run operations
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ENGINEERING_PROJECT_NUMBER: ${{ vars.ENGINEERING_PROJECT_NUMBER }}
+          AUTOMATION_WRITES: ${{ vars.AUTOMATION_WRITES }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          COMMAND: ${{ inputs.command || 'schedule' }}
+          APPLY: ${{ inputs.apply || github.event_name == 'schedule' }}
+          SPRINT: ${{ inputs.sprint }}
+          ISSUES: ${{ inputs.issues }}
+        run: |
+          args=()
+          if [[ "$APPLY" == true ]]; then args+=(--apply); fi
+          args+=("$COMMAND")
+          if [[ "$COMMAND" == approve ]]; then args+=("$SPRINT"); fi
+          if [[ "$COMMAND" == approve || "$COMMAND" == reconcile ]]; then
+            if [[ ! "$ISSUES" =~ ^[1-9][0-9]*(\ [1-9][0-9]*)*$ ]]; then
+              printf '%s\n' 'Enter space separated issue numbers.'
+              exit 2
+            fi
+            read -r -a numbers <<< "$ISSUES"
+            args+=("${numbers[@]}")
+          fi
+          python3 -m automation "${args[@]}"
