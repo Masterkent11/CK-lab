@@ -18,7 +18,7 @@ Python 3.12 and GitHub Actions run the repository workflow. Repository issues st
 | Engineering CI | PR, push to master, manual | Contents read | Failing job and step appear in Actions |
 | Issue and PR lifecycle | Issue events and PR events targeting the default branch | Contents read, Issues write, Pull requests read | Health workflow links to the run |
 | Engineering operations | Manila schedule and manual dispatch | Contents read, Issues write | Health workflow links to the run |
-| Security monitor | Monday and manual dispatch | Contents read, Issues write, Security events read | Health workflow links to the run. Scanner matches fail the job after triage |
+| Security monitor | Daily and manual dispatch | Contents read, Issues write, Vulnerability alerts read | Health workflow links to the run. Scanner matches fail the job after triage |
 | Automation health | A monitored workflow completes with a failure | Actions read, Contents read, Issues write, Pull requests read | Inspect the health job and delivery log |
 
 The privileged workflows check out the default branch, read event JSON as data and ignore PR code and artifacts. CI can build PR code with a read only token and no configured automation secrets. Checkout credentials are removed from the job. Third party actions are pinned to commit SHAs. See [GitHub workflow events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows).

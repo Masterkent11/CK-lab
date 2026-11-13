@@ -62,7 +62,10 @@ class TicketLifecycleService:
         number = issue["number"]
         tags = labels(issue)
         metadata = self.triage.run(issue) if event == "intake" else classify(issue)
-        current = (self.project.get(number, "Status", "name") if self.project else None) or issue_status(issue)
+        project_status = self.project.get(number, "Status", "name") if self.project else None
+        if event == "intake" and project_status not in {*STATUS_LABELS, None, "Todo"}:
+            return
+        current = project_status if project_status in STATUS_LABELS else issue_status(issue)
         approved = event == "qa" and bool(actor) and self.store.github.can_write_issues(actor)
         if event == "qa" and not approved:
             return

@@ -218,6 +218,16 @@ class AutomationTest(unittest.TestCase):
         draft = Work(issue(2), fields, "Ready", ())
         self.assertEqual(planner.plan(planner.calendar.at(0), [blocked, draft]), ([], [draft]))
 
+    def test_native_project_default_todo_becomes_backlog(self):
+        ticket = issue()
+        self.repo.data[1] = ticket
+        board = Projects(self.repo)
+        item = board.ensure_item(ticket)
+        item["fieldValues"]["nodes"].append({"field": {"name": "Status"}, "name": "Todo", "optionId": "todo"})
+        lifecycle = TicketLifecycleService(self.store, board, self.router)
+        lifecycle.run(ticket, "intake")
+        self.assertEqual(board.get(1, "Status", "name"), "Backlog")
+
     def test_security_fixture_and_deduplication(self):
         service = SecurityFindingService(self.repo, self.store, None, self.router)
         fake = Finding("test", "Synthetic", "a", "b", "c", "High", "d", "e", synthetic=True)

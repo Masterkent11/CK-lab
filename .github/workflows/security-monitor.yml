@@ -30,9 +30,9 @@ jobs:
           persist-credentials: false
       - name: Scan repository history
         id: gitleaks
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '23 9 * * *'
         run: |
           if [[ "$GITHUB_EVENT_NAME" == schedule && "$(TZ=Asia/Manila date +%u)" != 1 ]]; then
+            printf '%s\n' 'Full history scan runs on Mondays. Dependabot intake continues.'
             exit 0
           fi
           code=0

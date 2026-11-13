@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from .config import POINTS, PRIORITIES, TRACKS
+from .config import POINTS, PRIORITIES, STATUSES, TRACKS
 from .issues import EPIC, HEADINGS, classify, issue_status, labels
 
 
@@ -115,7 +115,9 @@ class SprintPlanningService:
                     value = self.project.get(number, name, attribute)
                     if value is not None:
                         fields[name] = value
-                status = self.project.get(number, "Status", "name") or status
+                board_status = self.project.get(number, "Status", "name")
+                if board_status in STATUSES:
+                    status = board_status
             if status == "Done" and "qa-required" in labels(issue):
                 approvals = [event["created_at"] for event in self.github.pages(f"/issues/{number}/events")
                              if event["event"] == "labeled" and event.get("label", {}).get("name") == "qa-approved"]
