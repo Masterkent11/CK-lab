@@ -1,7 +1,7 @@
 name: Security monitor
 on:
   schedule:
-    - cron: '23 9 * * 1'
+    - cron: '23 9 * * *'
       timezone: Asia/Manila
   workflow_dispatch:
     inputs:
@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   issues: write
-  security-events: read
+  vulnerability-alerts: read
 
 jobs:
   scan:
@@ -30,7 +30,11 @@ jobs:
           persist-credentials: false
       - name: Scan repository history
         id: gitleaks
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '23 9 * * *'
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == schedule && "$(TZ=Asia/Manila date +%u)" != 1 ]]; then
+            exit 0
+          fi
           code=0
           bash .github/scripts/gitleaks.sh "$RUNNER_TEMP/gitleaks.json" || code=$?
           if [[ "$code" != 0 && "$code" != 25 ]]; then exit "$code"; fi
@@ -49,7 +53,8 @@ jobs:
         run: |
           args=()
           if [[ "$APPLY" == true ]]; then args+=(--apply); fi
-          args+=(security --report "$RUNNER_TEMP/gitleaks.json")
+          args+=(security)
+          if [[ -f "$RUNNER_TEMP/gitleaks.json" ]]; then args+=(--report "$RUNNER_TEMP/gitleaks.json"); fi
           if [[ "$EVENT_NAME" == schedule ]]; then args+=(--scheduled); fi
           python3 -m automation "${args[@]}"
       - name: Flag findings for review

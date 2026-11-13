@@ -24,7 +24,7 @@
     "daily": {"days": [0, 1, 2, 3, 4], "time": "09:00", "window_hours": 12},
     "weekly": {"days": [4], "time": "17:00", "window_hours": 7},
     "sprint": {"days": [0, 1, 2, 3, 4, 5, 6], "time": "09:00", "window_hours": 12},
-    "security": {"days": [0], "time": "09:00", "window_hours": 12}
+    "security": {"days": [0, 1, 2, 3, 4, 5, 6], "time": "09:00", "window_hours": 12}
   },
   "notifications": {
     "enabled": true,
