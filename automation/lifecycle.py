@@ -90,8 +90,11 @@ class TicketLifecycleService:
         if target:
             if self.project:
                 self.project.set(issue, "Status", target)
+            remove = set(STATUS_LABELS.values()) - {STATUS_LABELS[target]}
+            if event == "reopened":
+                remove.add("qa-approved")
             self.store.sync_labels(issue, add=(STATUS_LABELS[target],),
-                                   remove=set(STATUS_LABELS.values()) - {STATUS_LABELS[target]})
+                                   remove=remove)
             if approved and target == "Done" and issue["state"] == "open" and self.store.writes:
                 self.store.github.rest(f"/issues/{number}", method="PATCH",
                                        payload={"state": "closed", "state_reason": "completed"})

@@ -43,7 +43,6 @@ class Finding:
     state: str = "Open"
     validated: bool = False
     synthetic: bool = False
-    restricted: bool = False
 
     def body(self):
         fields = (
@@ -98,7 +97,7 @@ def secret_findings(report):
         evidence = f"Rule {rule} at commit {commit[:12]}" if REPO_PATH.fullmatch(rule) else "Matched a secret rule"
         yield Finding(f"gitleaks:{identity}", "Gitleaks", affected, evidence, "Pattern match",
                       "Medium", "A credential may have been exposed. Its validity is unknown.",
-                      "Review in private. Revoke and rotate any live credential.", restricted=True)
+                      "Review in private. Revoke and rotate any live credential.")
 
 
 class SecurityFindingService:
@@ -139,6 +138,7 @@ class SecurityFindingService:
         public = self.github.rest()["visibility"] == "public"
         if report_path:
             findings = list(secret_findings(json.loads(Path(report_path).read_text(encoding="utf-8")) or []))
+            log("scan_complete", source="Gitleaks", findings=len(findings))
             self._bounded(findings, public)
         try:
             alerts = list(self.github.pages("/dependabot/alerts", limit=10))
@@ -147,6 +147,7 @@ class SecurityFindingService:
                 raise
             log("scanner_unavailable", source="Dependabot", status=error.status)
             return
+        log("scan_complete", source="Dependabot", findings=len(alerts))
         active = [dependabot_finding(alert, self.github.repository_url()) for alert in alerts
                   if alert["state"] == "open" or self.store.find(f"finding:dependabot:{alert['number']}")]
         self._bounded(active, public)

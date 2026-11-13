@@ -31,7 +31,13 @@ Use `-DEMBROIDERY_SANITIZERS=ON` on Linux with Clang or GCC. Add new translation
 
 | Status | Scope |
 | --- | --- |
-| Implemented and verified | Automation unit tests, mocked Project and Telegram integration, local history scan |
+| Implemented and verified | Automation unit tests, mocked Project and Telegram integration, local history scan, hosted CI and repository backlog seeding |
 | Implemented but not externally verified | Project provisioning mutations, Roadmap presentation, delivery cooldowns against the real Telegram API |
 | Blocked by permissions or credentials | Live personal Project access and Telegram delivery until the repository secrets are configured |
 | Deferred | Embroidery algorithms, mobile features and optional local AI |
+
+## Baseline runs
+
+* [Engineering CI](https://github.com/Masterkent11/CK-lab/actions/runs/43480051392) completed the Python tests, C++20 build, GoogleTest via CTest, format and static analysis, sanitizer tests and Gitleaks.
+* [Seed run](https://github.com/Masterkent11/CK-lab/actions/runs/43480138728) created the backlog. The [UX prototype](https://github.com/Masterkent11/CK-lab/issues/13) is a proposed story. The [CI task](https://github.com/Masterkent11/CK-lab/issues/18) has a native dependency on the CMake task.
+* [Security monitor](https://github.com/Masterkent11/CK-lab/actions/runs/43480142847) ran a history scan and scanner triage in preview mode.

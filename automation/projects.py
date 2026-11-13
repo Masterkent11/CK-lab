@@ -104,13 +104,13 @@ class GitHubProjectAdapter:
             log("project_selected", number=self.project["number"], url=self.project["url"])
         return self.project
 
-    def _project_nodes(self, field, node, *, refresh=None):
+    def _project_nodes(self, field, node):
         document = (
             f"query($id: ID!, $cursor: String) {{ node(id: $id) {{ ... on ProjectV2 "
             f"{{ {field}(first: 50, after: $cursor) {{ {PAGE} nodes {{ {node} }} }} }} }} }}"
         )
         return self._connection(document, {"id": self.project["id"]},
-                                lambda data: data["node"][refresh or field], field)
+                                lambda data: data["node"][field], field)
 
     @property
     def fields(self):
